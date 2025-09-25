@@ -1,0 +1,1 @@
+# QAGURU_Allure_RestAPI_hw18
