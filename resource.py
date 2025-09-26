@@ -1,6 +1,6 @@
 from dataclasses import dataclass
+from itertools import product
 
-import requests
 from selene import browser, have, be
 
 
@@ -8,27 +8,23 @@ from selene import browser, have, be
 class AddToCardApi:
     BASE_URL : str = 'https://demowebshop.tricentis.com/'
 
-    def add_to_card_laptop(self):
+    def add_to_card_laptop(self, session):
         object_api = 'addproducttocart/catalog/31/1/1'
-        request = requests.post(self.BASE_URL + object_api)
-        print(request.text)
-        print(request.cookies)
+        response = session.post(self.BASE_URL + object_api)
+        return response
 
-    def add_to_card_pc(self):
+    def add_to_card_pc(self, session):
         object_api = 'addproducttocart/catalog/72/1/1'
         option = 'addproducttocart/details/72/1'
-        request = requests.post(self.BASE_URL + object_api)
-        request_option = requests.post(self.BASE_URL + option, data={
+        response = session.post(self.BASE_URL + object_api)
+        response_option = session.post(self.BASE_URL + option, data={
             'product_attribute_72_5_18': 53,
             'product_attribute_72_6_19': 54,
             'product_attribute_72_3_20': 57,
             'addtocart_72.EnteredQuantity': 1
             }
         )
-        print(request.text)
-        print(request_option.text)
-        print(request.cookies)
-
+        return response_option, response
 
 @dataclass
 class CheckCardUi:
@@ -36,14 +32,20 @@ class CheckCardUi:
 
     def open_browser(self):
         browser.open(self.BASE_URL)
+        browser.driver.refresh()
 
 
     def open_card(self):
-        browser.element('.cart-label').click()
+        browser.element('#topcartlink').click()
 
     def assert_product_in_card(self):
         browser.element('[src="https://demowebshop.tricentis.com/content/images/thumbs/0000172_build-your-own-cheap-computer_80.jpeg"]').should(be.visible)
-        browser.element('.product-name').should(have.text('Build your own cheap computer'))
 
-z = AddToCardApi()
-z.add_to_card_pc()
+        browser.element('[src="https://demowebshop.tricentis.com/content/images/thumbs/0000224_141-inch-laptop_80.png"]').should(be.visible)
+
+        product = browser.all('.product-name')
+
+        product.should(have.size_greater_than_or_equal(2))
+
+        product.first.should(have.text('Build your own cheap computer'))
+        product.second.should(have.text('14.1-inch Laptop'))
